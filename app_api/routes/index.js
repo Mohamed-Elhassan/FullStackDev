@@ -1,19 +1,14 @@
-const express = require('express'); //Express app
-const router = express.Router(); //Router logic
+const express = require('express');
+const router = express.Router();
+const verifyToken = require('../middleware/verifyToken'); // Import authentication middleware
 
-const { expressjwt: jwt } = require('express-jwt');
-const auth = jwt({
-    secret: process.env.JWT_SECRET,
-    algorithms: ['HS256'],
-    userProperty: 'payload',
-});
-
-//This is where we import the contrllers we will route
+// Import controllers
 const tripsController = require('../controllers/trips');
 const authController = require('../controllers/authentication');
 
-//Define route for out trips endpoint
+console.log('🔑 JWT_SECRET:', process.env.JWT_SECRET);
 
+// Define routes
 router
     .route('/login')
     .post(authController.login);
@@ -24,13 +19,12 @@ router
 
 router
     .route('/trips')
-    .get(tripsController.tripsList) //GET method routes tripList
-    .post(auth, tripsController.tripsAddTrip);
+    .get(tripsController.tripsList)
+    .post(verifyToken, tripsController.tripsAddTrip);  // ✅ Uses `verifyToken`
 
-// GET Method routes tripsFindByCode - requires parameter
 router
     .route('/trips/:tripCode')
     .get(tripsController.tripsFindByCode)
-    .put(auth, tripsController.tripsUpdateTrip);
+    .put(verifyToken, tripsController.tripsUpdateTrip);  // ✅ Uses `verifyToken`
 
 module.exports = router;

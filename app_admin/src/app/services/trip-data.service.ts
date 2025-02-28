@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -11,7 +11,6 @@ import { BROWSER_STORAGE } from '../storage';
   providedIn: 'root'
 })
 export class TripDataService {
-  // Define the base API URL and the trips endpoint URL.
   private apiBaseUrl: string = 'http://localhost:3000/api';
   private tripsUrl: string = `${this.apiBaseUrl}/trips`;
 
@@ -20,6 +19,16 @@ export class TripDataService {
     @Inject(BROWSER_STORAGE) private storage: Storage
   ) {}
 
+  // Get authentication token from localStorage
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.storage.getItem('travlr-token');
+    if (!token) {
+      console.error('❌ No authentication token found.');
+      return new HttpHeaders(); // Return empty headers (avoids breaking requests)
+    }
+    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  }
+
   // Trip-related API calls
 
   getTrips(): Observable<Trip[]> {
@@ -27,7 +36,7 @@ export class TripDataService {
   }
 
   addTrip(formData: Trip): Observable<Trip> {
-    return this.http.post<Trip>(this.tripsUrl, formData);
+    return this.http.post<Trip>(this.tripsUrl, formData, { headers: this.getAuthHeaders() });
   }
 
   getTrip(tripCode: string): Observable<Trip[]> {
@@ -35,7 +44,7 @@ export class TripDataService {
   }
 
   updateTrip(formData: Trip): Observable<Trip> {
-    return this.http.put<Trip>(`${this.tripsUrl}/${formData.code}`, formData);
+    return this.http.put<Trip>(`${this.tripsUrl}/${formData.code}`, formData, { headers: this.getAuthHeaders() });
   }
 
   // Authentication API calls
